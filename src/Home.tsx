@@ -83,9 +83,41 @@ const Home = (props: HomeProps) => {
     })();
   };
 
+  let intervalId: NodeJS.Timeout
+  let count = 0
+  const infinityMint = () => {
+    console.log('MIIIIIIIIIINT 開始')
+    intervalId = setInterval(() => {
+      logTest()
+      if (count > 10) {
+        clearInterval(intervalId)  
+        console.log('DOOOOOOOOOOOOOOOOOONE')
+      }
+    },500)
+  }
+
+  const logTest = () => {
+    let targetTime = parseInt(process.env.REACT_APP_CANDY_START_DATE as string)
+    if (String(targetTime).length > 10) {
+      targetTime = targetTime / 1000
+    }
+    console.log('Target DateTime:', targetTime)
+    console.log('Current DateTime:', new Date().getTime() / 1000)
+    if(Math.floor(new Date().getTime() / 1000 ) > targetTime) {
+      console.log('買うよ')
+      // onMint()
+      count++
+    }
+  }
+
+  const clearMint = () => {
+    clearInterval(intervalId)
+  }
+
   const onMint = async () => {
     try {
       setIsMinting(true);
+      console.log('Mint Start')
       if (wallet && candyMachine?.program) {
         const mintTxId = await mintOneToken(
           candyMachine,
@@ -183,28 +215,44 @@ const Home = (props: HomeProps) => {
         {!wallet ? (
           <ConnectButton>Connect Wallet</ConnectButton>
         ) : (
-          <MintButton
-            disabled={isSoldOut || isMinting || !isActive}
-            onClick={onMint}
-            variant="contained"
-          >
-            {isSoldOut ? (
-              "SOLD OUT"
-            ) : isActive ? (
-              isMinting ? (
-                <CircularProgress />
+          <>
+            <MintButton
+              disabled={isSoldOut || isMinting || !isActive}
+              onClick={onMint}
+              variant="contained"
+            >
+              {isSoldOut ? (
+                "SOLD OUT"
+              ) : isActive ? (
+                isMinting ? (
+                  <CircularProgress />
+                ) : (
+                  "MINT"
+                )
               ) : (
-                "MINT"
-              )
-            ) : (
-              <Countdown
-                date={startDate}
-                onMount={({ completed }) => completed && setIsActive(true)}
-                onComplete={() => setIsActive(true)}
-                renderer={renderCounter}
-              />
-            )}
-          </MintButton>
+                <Countdown
+                  date={startDate}
+                  onMount={({ completed }) => completed && setIsActive(true)}
+                  onComplete={() => setIsActive(true)}
+                  renderer={renderCounter}
+                />
+              )}
+            </MintButton>
+            <MintButton
+              disabled={false}
+              onClick={infinityMint}
+              variant="contained"
+            >
+              START
+            </MintButton>
+            <MintButton
+              disabled={false}
+              onClick={clearMint}
+              variant="contained"
+            >
+              STOP
+            </MintButton>
+          </>
         )}
       </MintContainer>
 
